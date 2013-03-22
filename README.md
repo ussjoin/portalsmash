@@ -23,3 +23,6 @@ freely, subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be
    misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
+
+(Some of the text for this license taken from the famous ZLib license,
+available at http://www.gzip.org/zlib/zlib_license.html .)
