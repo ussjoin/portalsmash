@@ -14,6 +14,12 @@ WPA_Supplicant don't do what it wants. (Sorry about that.)
 
 PortalSmash derives from Malice Afterthought's Reticle project.
 
+Dependencies: Ruby Mechanize and Ruby Trollop. Mechanize is kind of a heavy
+library, but PortalSmash needs it to parse and interact with (often really
+badly coded) captive portal pages. They can be installed with:
+
+    gem install trollop mechanize
+
 To use:
 
     sudo ./portalsmash.rb [-d devicename] [-n netconfig file]
