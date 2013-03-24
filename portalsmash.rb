@@ -37,6 +37,7 @@ class PortalSmasher
   
   TESTPAGE = 'http://www.apple.com/library/test/success.html'
   CONFPATH = '/tmp/portalsmash.conf'
+  DHCP_CONFIG = File.dirname(__FILE__)+'/dhclient.conf'
   
   ATTACH_SUCCESS = 0
   ATTACH_FAIL = 1
@@ -179,7 +180,16 @@ class PortalSmasher
   
   def dhcp
     puts "DCHP-ing"
-    return [true, true, false].sample
+    
+    `dhclient #{@device} -cf #{DHCP_CONFIG} -r` #DHCP Release, and tells any old DHClients to let go of @device
+    `dhclient #{@device} -cf #{DHCP_CONFIG} -1` #Try just once, with timeout specified in DHCP_CONFIG
+    
+    if $?.exitstatus != 0
+      return false
+    else
+      return true
+    end
+    
   end
   
   def conncheck
