@@ -16,7 +16,7 @@ PortalSmash derives from Malice Afterthought's Reticle project.
 
 To use:
 
-   sudo ./portalsmash.rb [-d devicename] [-n netconfig file]
+    sudo ./portalsmash.rb [-d devicename] [-n netconfig file]
        
 Netfile format:
 PortalSmash allows a network key file to be specified that includes, well, keys
