@@ -1,9 +1,40 @@
-portalsmash
+PortalSmash
 ===========
 
-Utility to connect to open WiFi and click through "captive portal"-type agreements.
+Utility to connect to open WiFi and click through "captive portal"-type
+agreements.
 
-(C) 2013, Malice Afterthought, Inc.
+PortalSmash will scan, find open (or known, more on this later) WiFi, and
+then try to connect to it, get an IP address, and get to the Web. If it
+succeeds, it will keep checking the connection every few seconds, and restart
+if it fails (allowing it to be used on mobile devices).
+
+PortalSmash needs to be run as root, because otherwise DHClient and 
+WPA_Supplicant don't do what it wants. (Sorry about that.)
+
+PortalSmash derives from Malice Afterthought's Reticle project.
+
+To use:
+
+   sudo ./portalsmash.rb -d <devicename> -n <netconfig file>
+       
+Netfile format:
+PortalSmash allows a network key file to be specified that includes, well, keys
+for networks. The file must be in YAML, and formatted approximately as so:
+
+    ---
+    NetName:
+        key: ohboyitsakey 
+    HypotheticalWPAE:
+        username: foo
+        password: bar
+
+This will allow the program to connect to WiFi for which you have been given
+credentials (e.g., your home WiFi network). PortalSmash will connect to known
+networks before unknown networks.
+
+
+(C) 2012-2013, Malice Afterthought, Inc.
 
 This software is provided 'as-is', without any express or implied
 warranty, including the warranties of merchantability or fitness for a 
