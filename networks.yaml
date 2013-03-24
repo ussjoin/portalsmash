@@ -1,6 +1,6 @@
 ---
 Private: 
-	key: 12345abcde # Works around a *lot* of pubs in Dublin.
+    key: 12345abcde # Works around a *lot* of pubs in Dublin.
 HypotheticalWPAE:
-	username: foo
-	password: bar
+    username: foo
+    password: bar
