@@ -33,7 +33,7 @@ require 'trollop'
 class PortalSmasher
   
   #Variables for seeing what it's doing right now - not modifiable outside the class
-  attr_reader :state, :running, :scan_success, :attach_state, :dhcp_success, :cc_success
+  attr_reader :state, :running, :scan_success, :attach_state, :dhcp_success, :cc_success, :number_of_networks, :net_counter
   
   TESTPAGE = 'http://www.apple.com/library/test/success.html'
   CONFPATH = '/tmp/portalsmash.conf'
@@ -45,6 +45,9 @@ class PortalSmasher
   def initialize(dev, file)
     @state = :start
     @running = true
+    
+    @number_of_networks = 0
+    @net_counter = 0
     
     #Storage variables internal to the class (No accessors)
     @device = dev
@@ -142,7 +145,9 @@ class PortalSmasher
 
     end
     
-    if (encnets.size + unencnets.size == 0)
+    @net_counter = 0
+    @number_of_networks = encnets.size + unencnets.size
+    if (@number_of_networks == 0)
       return false
     end
     
@@ -153,21 +158,37 @@ class PortalSmasher
   
   def attach
     puts "Attaching"
-    @attach_state = [ATTACH_SUCCESS, ATTACH_FAIL, ATTACH_FAIL, ATTACH_OUT].sample
+    
+    `wpa_cli select #{@net_counter}`
+    
+    @net_counter += 1
+    
+    sleep(5)
+    stat = `wpa_cli status`
+    
+    
+    if (stat =~ /COMPLETED/)
+      return ATTACH_SUCCESS
+    elsif (@net_counter == @number_of_networks)
+      return ATTACH_OUT
+    else
+      return ATTACH_FAIL
+    end
+    
   end
   
   def dhcp
     puts "DCHP-ing"
-    @dhcp_success = [true, true, false].sample
+    return [true, true, false].sample
   end
   
   def conncheck
     puts "Checking Connection"
     @page = @agent.get(TESTPAGE)
     if (@page.title == "Success") #Could add other checks here.
-      @cc_success = true
+      true
     else
-      @cc_success = false
+      false
     end
   end
   
@@ -192,6 +213,20 @@ class PortalSmasher
     end
   end
 
+  def killthings
+    `pkill -KILL wpa_supplicant`
+    `ifconfig #{@device} up` #because when we've killed this, sometimes it stays down.
+  end
+  
+  def startwpa
+    `wpa_supplicant -B -i #{@device} -c #{CONFPATH}`
+    if $?.exitstatus != 0
+      return false
+    else
+      return true
+    end
+  end
+  
   
   def run
     while @running
@@ -200,16 +235,22 @@ class PortalSmasher
       puts "State: #{@state}"
       case @state
       when :start
+        killthings        
         @scan_success = scan
         if @scan_success
           @state = :list
+          if startwpa == false
+            @state = :start
+            puts "Failed to start wpa_supplicant. Are you root?"
+            sleep(2)
+          end
         else
           @state = :start
           puts "Scan failed using #{@device}."
           sleep(2)
         end
       when :list
-        attach
+        @attach_state = attach
         case @attach_state
         when ATTACH_SUCCESS
           @state = :attached
@@ -219,14 +260,14 @@ class PortalSmasher
           @state = :start
         end
       when :attached
-        dhcp
+        @dhcp_success = dhcp
         if @dhcp_success
           @state = :hasip
         else
           @state = :attached
         end
       when :hasip
-        conncheck
+        @cc_success = conncheck
         if @cc_success
           @state = :monitor
         else
@@ -234,7 +275,7 @@ class PortalSmasher
         end
       when :breaker
         runbreak
-        conncheck
+        @cc_success = conncheck
         if @cc_success
           @state = :monitor
         else
@@ -242,7 +283,7 @@ class PortalSmasher
         end
       when :monitor
         sleep 2
-        conncheck
+        @cc_success = conncheck
         if @cc_success
           @state = :monitor
         else
