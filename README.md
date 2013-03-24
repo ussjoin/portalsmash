@@ -14,6 +14,12 @@ WPA_Supplicant don't do what it wants. (Sorry about that.)
 
 PortalSmash derives from Malice Afterthought's Reticle project.
 
+Which portals does it get through? Try it yourself and see, but it's
+quite a few from a set of *very* basic heuristics. If you find one it
+doesn't handle, I'd love to get a pull request from you. (Hint: open IRB,
+load Mechanize, and work through it-- then send me the commands, and what
+differentiates it from the portals I *do* solve.)
+
 Dependencies: Ruby Mechanize and Ruby Trollop. Mechanize is kind of a heavy
 library, but PortalSmash needs it to parse and interact with (often really
 badly coded) captive portal pages. They can be installed with:
