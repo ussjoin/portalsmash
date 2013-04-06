@@ -43,7 +43,7 @@ class PortalSmasher
   ATTACH_FAIL = 1
   ATTACH_OUT = 2
   
-  def initialize(dev, file)
+  def initialize(dev, file, sig)
     @state = :start
     @running = true
     
@@ -56,6 +56,7 @@ class PortalSmasher
     @page = nil
     @agent = Mechanize.new
     @knownnetworks = {}
+    @sig = sig
     
     if file
       @knownnetworks = YAML.load_file(file)
@@ -237,6 +238,14 @@ class PortalSmasher
     end
   end
   
+  def sendsig
+    if !@sig.nil?
+      pid = File.read @sig
+      if !pid.nil?
+        `kill -s SIGUSR1 #{pid}`
+      end
+    end
+  end
   
   def run
     while @running
@@ -279,6 +288,7 @@ class PortalSmasher
       when :hasip
         @cc_success = conncheck
         if @cc_success
+          sendsig
           @state = :monitor
         else
           @state = :breaker
@@ -287,6 +297,7 @@ class PortalSmasher
         runbreak
         @cc_success = conncheck
         if @cc_success
+          sendsig
           @state = :monitor
         else
           @state = :list
@@ -313,6 +324,12 @@ annoyances. It connects to any open WiFi and attempts to get an IP and make
 sure it works. If it works, it keeps rechecking every few seconds, 
 reconnecting (or finding a new connection) if it drops.
 
+Sig:
+If you wish, you may specify a path that contains a PID for PortalSmash to
+send a SIGUSR1 to. This will be sent whenever PortalSmash connects to a new
+network. If the PID changes over time, that's fine; PortalSmash will read
+the file again each time it sends a SIGUSR1.
+
 Netfile format:
 PortalSmash allows a network key file to be specified that includes, well, keys
 for networks. The file must be in YAML, and formatted approximately as so:
@@ -335,10 +352,11 @@ HEREBEDRAGONS
   
   opt :device, "Device to connect", :type => :string, :default => "wlan0" # string --name <device>, default to wlan0
   opt :netfile, "Network key file in YAML format, as detailed above", :type => :io #io --netfile <path>
+  opt :sig, "Path which will contain a PID for PortalSmash to send a SIGUSR1 to", :type => :string, :default => nil
 end
 
 
 
-ps = PortalSmasher.new(opts[:device], opts[:netfile])
+ps = PortalSmasher.new(opts[:device], opts[:netfile], opts[:sig])
 ps.run
 
