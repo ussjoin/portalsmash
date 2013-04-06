@@ -250,7 +250,11 @@ class PortalSmasher
   
   def sendsig
     if !@sig.nil?
-      pid = File.read @sig
+      begin
+        pid = File.read @sig
+      rescue => e
+        puts "I was given a PID file to tell, but I don't see it."
+      end
       if !pid.nil?
         `kill -s SIGUSR1 #{pid}`
       end
