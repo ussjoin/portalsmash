@@ -159,7 +159,11 @@ class PortalSmasher
   end
   
   def attach
-    puts "Attaching"
+    if (@net_counter.to_i >= @number_of_networks.to_i)
+      puts "I'm out of networks to which I can attach."
+      return ATTACH_OUT
+    end
+    puts "Attaching to Network #{@net_counter+1} of #{@number_of_networks}."
     
     `wpa_cli select #{@net_counter}`
     
@@ -168,10 +172,9 @@ class PortalSmasher
     sleep(5)
     stat = `wpa_cli status`
     
-    
     if (stat =~ /COMPLETED/)
       return ATTACH_SUCCESS
-    elsif (@net_counter == @number_of_networks)
+    elsif (@net_counter.to_i >= @number_of_networks.to_i)
       return ATTACH_OUT
     else
       return ATTACH_FAIL
@@ -195,16 +198,22 @@ class PortalSmasher
   
   def conncheck
     puts "Checking Connection"
-    @page = @agent.get(TESTPAGE)
-    if (@page.title == "Success") #Could add other checks here.
-      true
-    else
+    begin
+      @page = @agent.get(TESTPAGE)
+      if (@page.title == "Success") #Could add other checks here.
+        true
+      else
+        false
+      end
+    rescue => e
+      puts "Crash during connection checking, so that's a no."
       false
     end
   end
   
   def runbreak
     puts "Portal Breaking"
+    return if @page.nil?
     if (@page.forms.size == 1 && @page.forms[0].buttons.size == 1)
       f = @page.forms[0]
       f.submit(f.buttons[0])
@@ -226,6 +235,7 @@ class PortalSmasher
 
   def killthings
     `pkill -KILL wpa_supplicant`
+    `pkill -KILL dhclient`
     `ifconfig #{@device} up` #because when we've killed this, sometimes it stays down.
   end
   
